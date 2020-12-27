@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style> 
+        .tab { 
+            display: inline-block; 
+            margin-left: 40px; 
+        }
+		.tab2
+		{
+				display: inline-block;
+				margin-left: 25px;
+		}
+    </style>
+</head>
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+
+attribute  vec4 vPosition;
+attribute  vec4 vColor;
+varying vec4 fColor;
+attribute vec3 vNormal;
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
+
+uniform float transpa;
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform vec4 lightPosition;
+
+uniform float shininess;
+uniform float redColor;
+uniform float greenColor;
+uniform float blueColor;
+uniform bool lighting;
+
+
+	void main(){ 
+	          fColor.xyz=vColor.xyz;
+			  fColor.w= transpa;     //vColor.w;
+			if(vColor.x>0.0)
+		    fColor.x=vColor.x-redColor;
+			else if(vColor.y>0.0)
+			fColor.y=vColor.y-greenColor;
+			else if(vColor.z>0.0)
+			 fColor.z=vColor.z-blueColor;
+			 
+			
+			 
+			 
+			if(lighting)		
+			 {
+			 vec3 pos =-(modelViewMatrix * vPosition).xyz;
+			 vec3 light;
+			 
+			 
+			 
+				light=lightPosition.xyz;
+			
+			 
+			 vec3 L = normalize( light-pos );
+			 
+			vec3 E = normalize( -pos );
+			vec3 H = normalize( L + E );
+			vec4 NN =vec4(vNormal,0);
+			
+			vec3 N = normalize( (modelViewMatrix*NN).xyz);
+			vec4 ambient = ambientProduct;
+			float Kd = max( dot(L, N), 0.0 );
+			
+			vec4  diffuse = Kd*diffuseProduct;
+			
+			float Ks = pow( max(dot(N, H), 0.0), shininess );
+			vec4  specular = Ks * specularProduct;
+			
+			if( dot(L, N) < 0.0 ) 
+			{
+			
+			specular = vec4(0.0, 0.0, 0.0, 1.0);
+			
+			} 
+				
+			 fColor=ambient+diffuse+specular;
+			 fColor.a=1.0;
+			 
+		}
+			 
+			 
+		gl_Position = projectionMatrix * modelViewMatrix * vPosition; 
+	   
+	}
+</script>
+
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+uniform int flag_Color;
+varying vec4 fColor;
+uniform float Transparency;
+	void main(){
+		
+		if(flag_Color == 0)
+		{
+		
+		gl_FragColor = fColor;
+		}
+		else if(flag_Color==1)
+		{
+		gl_FragColor=vec4(0.0, 0.0, 0.0,Transparency);
+		}
+		else if(flag_Color==2)
+		{
+		gl_FragColor=vec4(1.0, 0.0, 0.0,Transparency);
+		}
+		else if(flag_Color==3)
+		{
+		gl_FragColor=vec4(1.0, 1.0, 0.0,Transparency );
+		}
+		else if(flag_Color==4)
+		{
+		gl_FragColor=vec4(0.0, 1.0, 0.0,Transparency);
+		}
+		else if(flag_Color==5)
+		{
+		gl_FragColor=vec4( 0.0, 0.0, 1.0,Transparency);
+		}
+		else if(flag_Color == 6)
+		{
+		gl_FragColor=vec4(1.0, 0.0, 1.0, Transparency);
+		}
+		else if(flag_Color == 7)
+		{
+		gl_FragColor=vec4(0.0, 1.0, 1.0, Transparency);
+		}
+	}
+
+</script>
+
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="Ufile.js"></script>
+
+<body>
+
+<canvas id="gl-canvas" width="640" height="360">
+Oops ... your browser doesn't support the HTML canvas element
+</canvas>
+
+<br/>
+<div>
+<!--<button id = "Lighting">Change Lighting</button>-->
+<label for="Lighting"><span class="tab"></span>Lighting Open :</label>
+<input type="checkbox" id="Lighting" name="Lighting">
+<span class="tab2"></span>
+Change Lighting Position :<span class="tab2"></span>
+ X : <input id="LightX_Slider" type="range"
+ min="0.0" max="25.0" step="1.0" value="1.0" />
+ 
+ <span class="tab2"></span>
+ Y : <input id="LightY_Slider" type="range"
+ min="0.0" max="25.0" step="1.0" value="1.0" />
+ 
+  <span class="tab2"></span>
+ Z : <input id="LightZ_Slider" type="range"
+ min="0.0" max="25.0" step="1.0" value="1.0" />
+ 
+ 
+ </div>
+ 
+ <div>
+(set slider to 0 to return to the original color)
+<span class="tab2"></span>
+
+Pure Color  : 0<input id="pure_Color" type="range"
+ min="0" max="6" step="1" value="0" />
+7
+
+<span class="tab2"></span>
+Transparency  : 0.4<input id="Transparency_Slider" type="range"
+ min="0.3" max="1.0" step="0.1" value="1.0" />
+1.0
+</div>
+
+ <div>
+<label for="WireFrame"><span class="tab"></span>WireFrame Open :</label>
+<input type="checkbox" id="WireFrame" name="WireFrame">
+
+<span class="tab"></span>
+<button id = "ButtonPers">Orthogonal</button>
+<span class="tab2"></span>
+<button id = "pers">Perspective</button>		 
+</div>
+
+<br/>
+
+
+
+
+<div>
+
+Scale 0.01<input id="scaleSlider" type="range"
+ min="0.01" max="2.50" step="0.01" value="0.65" />
+ 2.5
+<span class="tab2"></span>
+Translate X -2<input id="trans_xSlider" type="range"
+ min="-2.0" max="2.0" step="0.01" value="-0.2" />
+ 2
+
+<span class="tab2"></span>
+ Translate Y -2<input id="trans_ySlider" type="range"
+ min="-2.0" max="2.0" step="0.01" value="0.0" />
+ 2
+
+<span class="tab2"></span>
+Translate Z -1<input id="trans_zSlider" type="range"
+ min="-2.0" max="2.0" step="0.01" value="1.7" />
+ 2
+</div>
+
+
+<div>
+(changing the point of view of the camera)
+phi value : -135<input id="phi" type="range"
+ min="-135.0" max="135.0" step="5.0" value="0.0" />
+ 135
+ <span class="tab2"></span>
+theta value : -135<input id="thetaeye" type="range"
+ min="-135.0" max="135.0" step="5.0" value="0.0" />
+135
+
+
+</div>
+
+<div>
+
+(Change the color of the different side surfaces of the U shape)
+ <span class="tab2"></span>
+Color 1 : 0<input id="redSlider" type="range"
+ min="0.0" max="1.0" step="1.0" value="0.0" />
+ 1
+ 
+ <span class="tab2"></span>
+ 
+ Color 2 : 0<input id="greenSlider" type="range"
+ min="0.0" max="1.0" step="1.0" value="0.0" />
+ 1
+
+<span class="tab2"></span>
+
+<span class="tab2"></span> Color 3 : 0<input id="blueSlider" type="range"
+ min="0.0" max="1.0" step="1.0" value="0.0" />
+ 1
+
+</div>
+<div>
+<b>
+	Press X or x for Rotation X,Press Y or y for Rotation Y,Press Z or z for Rotation Z,Press T or t for stopping Rotation
+	<span class="tab2"></span> 
+	
+</b>
+
+</div>
+
+</div>
+<strong>Press 1   for  counterclockwise,Press 2 for clockwise</strong>
+
+</div>
+</body>
+</html>
